@@ -1,0 +1,3 @@
+swaymsg 'workspace "2:browse"; exec flatpak run app.zen_browser.zen'
+sleep 2
+swaymsg 'workspace "3:editor"; exec flatpak run com.sublimehq.SublimeText'

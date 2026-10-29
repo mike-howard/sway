@@ -1,0 +1,6 @@
+#!~/.local/bin/_mymenu
+logout   ||  swaymsg exit
+shutdown || systemctl poweroff
+suspend  || systemctl suspend
+reboot   || systemctl reboot
+

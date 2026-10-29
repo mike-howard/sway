@@ -1,0 +1,42 @@
+#! _mymenu
+# 🇦 🇧 🇨 🇩 🇪 🇫 🇬 🇭 🇮 🇯 🇰 🇱 🇲 🇳 🇴 🇵 🇶 🇷 🇸 🇹 🇺 🇻 🇼 🇽 🇾 🇿
+# 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣
+# ⬅️ ⬆️ ➡️ ⬇️ ↗️ ↘️ ↙️ ↖️ ↕️ ↔️
+# ↩️ ↪️ 🔄 🔃 ℹ️ 📶
+# ➖ ➕ ✖️ ➗ 🟰
+# ⎇ Alt / Mod1: ⎇ or ⌥ (Option) / 💎 (Alternative visual marker)
+# ⎈ Ctrl: ⎈ or 🕹️ (Control indicator)
+# Horizontal Split: ↔️ or ➖
+# Vertical Split: ↕️ or ⦾ / ➕
+# Fullscreen: 📺 or 🔲
+# ❖ + ↵  = 🖥️ (Open Terminal)
+# ❖ + 🇩  = 🚀 (Application Menu)
+# ❖ + 🔲 = 🔁 (Toggle Floating Mode)
+# ❖ + 🇸  = 🥞 (Stacked Layout)
+#
+
+🪟🇩     apps menu || rofi -show drun -show-icons 
+🪟↩️     new terminal 🖥️ || swaymsg exec foot
+🪟🇫     make current window fullscreen
+🪟⬆️🇶   kill focused window || swaymsg kill
+🪟⬆️🇨   reload Sway configuration || reload
+🪟⬆️➖   move window to scratchpad || swaymsg move scratchpad
+🪟➖     cycle/Hide Scratchpad || swaymsg scratchpad show 
+
+🪟⬆️🇪   exit Sway || ~/.local/bin/sway/_mymenu ~/.local/bin/sway/exit.menu
+
+
+🪟🇧  horizontal split ||  swaymsg splith
+🪟🇻  vertical split ||  swaymsg splitv
+🪟🇪  toggle split H <> V ||  swaymsg toggle split
+
+
+🪟🇸  stacking layout || swaymsg layout stacking
+🪟🇼  tabbed layout   || swaaymsg layout tabbed
+
+🪟🇫    bindsym $mod+f fullscreen
+
+sw   switch workspace || ~/.local/bin/sway/_my_choose_workspace 
+fw   find window || ~/.local/bin/sway/_my_choose_window 
+aw   set window alias 
+bm   goto bookmark || ~/.local/bin/sway/_my_goto_bookmark 

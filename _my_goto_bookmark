@@ -1,0 +1,2 @@
+cat ~/.config/_mybookmarks |  sed -e "s/\(.*\)/\\1 XX || swaymsg exec foot -D=\\1/" |  ~/.local/bin/sway/_mymenu
+

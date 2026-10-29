@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+#  Show a menu using rofi (https://github.com/davatorium/rofi)
+#  and use it to launch a command:
+#
+#  usage:
+#
+#  $ _mymenu /path/thing.menu
+#   
+#  $ cat /path/thing.menu | _mymenu
+#
+# where /path/thing.menu contains something like:
+#
+#     # Ways to exit sway (comment, not shown)
+#
+#     logout ||  swaymsg exit
+#     suspend || systemctl suspend
+#
+
+input_source=${1:-/dev/stdin}
+
+if [ ! -r "$input_source" ]; then
+    echo "Error: Cannot read input from '$input_source'" >&2
+    exit 1
+fi
+
+# Slurp file minus comments to array.  We can only read it once as it
+# might be standard input, but we can then pipe it to other commands multiple times
+
+mapfile -t my_array < <(sed "/^#/d" "$input_source") 
+
+function stream_array {
+	printf "%s\n" "${my_array[@]}" 
+}
+
+selected=$( stream_array | sed -e "s/|.*$//" | rofi -dmenu )
+
+[ "" == "$selected" ] && exit 0
+
+cmd=$(stream_array | \
+  grep -F "$selected||" | \
+  sed -e "s/.*[|][|]//" )
+
+#  grep -P -e "^\Q$selected\E *[|][|]"   would allow stripping of trailing whitespace (Perl mode turning off regexp matching while processing the string)
+
+[ "" !=  "$cmd" ] &&  echo $cmd | bash
+
+

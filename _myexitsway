@@ -1,0 +1,5 @@
+swaynag -t warning -m 'Power Menu' \
+    -B 'logout' 'swaymsg exit' \
+    -B 'suspend' 'systemctl suspend' \
+    -B 'reboot' 'systemctl reboot' \
+    -B 'shutdown' 'systemctl poweroff'

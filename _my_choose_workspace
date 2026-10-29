@@ -1,0 +1,6 @@
+swaymsg -t get_workspaces | \
+   jq '.[] | select (.representation != null) | .name' | \
+      sed -e "s/^\(.*\)\$/\\1 || swaymsg workspace \\1/" | 
+        ~/.local/bin/sway/_mymenu
+
+       

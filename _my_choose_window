@@ -1,0 +1,11 @@
+swaymsg -t get_tree | jq -r '
+  def walk($ws):
+    . as $n
+    | (if $n.type == "workspace" then $n.name else $ws end) as $w
+    | (if ($n.type == "con" or $n.type == "floating_con" ) and $n.name != null then "\($w)\t\($n.id)\t\($n.name)" else empty end),
+      (($n.nodes[]?, $n.floating_nodes[]?) | walk($w));
+
+  walk("")
+' | sed -e 's/\(.*\)\t\(.*\)\t\(.*\)/\1:\2) \3||swaymsg workspace "\1"; swaymsg -r [con_id=\2] focus/' | \
+  ~/.local/bin/sway/_mymenu
+m

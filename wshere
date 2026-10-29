@@ -1,0 +1,4 @@
+for ws in $(swaymsg -t get_workspaces | jq -r '.[].name'); do
+  echo  "[workspace=$ws] move workspace to output current"
+  swaymsg "[workspace=$ws] move workspace to output HDMI-A-1" || continue
+done

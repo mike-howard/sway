@@ -1,0 +1,6 @@
+    if [ -z "$1" ]; then
+        echo "Error: Please specify a Flatpak application ID or name."
+        return 1
+    fi
+    echo "Running $1"
+    flatpak run "$1" > /dev/null 2>&1 & disown
