@@ -26,6 +26,7 @@ and displayed using
  _mymenu ~/.local/bin/sway.menu
 ```
 
+![Example](doc/snap.png)
 
 The key sequences shown are for information only - they should match the ones defined in ~/.config/sway/config.   Choosing them from the menu actually runs the command shown after the double pipe symbol. In the case of 'fw' for find window,  the 'kw' is there so that you can enter 'kw' to select the command quickly (in the menu only).
 

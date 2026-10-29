@@ -33,7 +33,7 @@ function stream_array {
 	printf "%s\n" "${my_array[@]}" 
 }
 
-selected=$( stream_array | sed -e "s/|.*$//" | rofi -dmenu )
+selected=$( stream_array | sed -e "s/|.*$//" | rofi -dmenu -i )
 
 [ "" == "$selected" ] && exit 0
 
