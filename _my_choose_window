@@ -8,4 +8,3 @@ swaymsg -t get_tree | jq -r '
   walk("")
 ' | sed -e 's/\(.*\)\t\(.*\)\t\(.*\)/\1:\2) \3||swaymsg workspace "\1"; swaymsg -r [con_id=\2] focus/' | \
   ~/.local/bin/sway/_mymenu
-m
