@@ -1,48 +1,167 @@
-#!/bin/bash
+#!/usr/bin/python3
 #
 #  Show a menu using rofi (https://github.com/davatorium/rofi)
 #  and use it to launch a command:
 #
 #  usage:
 #
-#  $ _mymenu /path/thing.menu
+#  $ _mymenu [-t <type>]  /path/thing.menu
 #   
-#  $ cat /path/thing.menu | _mymenu
+#  $ cat /path/thing.menu | _mymenu -t [<type>]
 #
-# where /path/thing.menu contains something like:
+# Options
+#   -t / --type run / text / exit
+#     run:  A command will be executed (usually swaymsg)
+#     text: selected option (or command) output to stdout
+#     exit: command part is an integer value to use a exit code
+#
+# the input text is something like:
 #
 #     # Ways to exit sway (comment, not shown)
 #
+#     <displayed test>  [ || <command> ]
+#     plain text
 #     logout ||  swaymsg exit
 #     suspend || systemctl suspend
 #
 
-input_source=${1:-/dev/stdin}
+#!/usr/bin/python3
 
-if [ ! -r "$input_source" ]; then
-    echo "Error: Cannot read input from '$input_source'" >&2
-    exit 1
-fi
+import os
+import re
+import sys
+import subprocess
+import threading
 
-# Slurp file minus comments to array.  We can only read it once as it
-# might be standard input, but we can then pipe it to other commands multiple times
+from argparse import ArgumentParser
 
-mapfile -t my_array < <(sed "/^#/d" "$input_source") 
+def parse_arguments():
+    parser = ArgumentParser(
+        prog="myMenu",
+        description="show menu in file using rofi")
 
-function stream_array {
-	printf "%s\n" "${my_array[@]}" 
-}
+    parser.add_argument("filename", nargs="?", default="/dev/stdin")
 
-selected=$( stream_array | sed -e "s/|.*$//" | rofi -dmenu -i )
+    parser.add_argument(
+        "-t", "--type",
+        default="run", choices=["run", "text", "exit"],
+        dest="type", 
+        help="type of command (run(D) / text / exit)")
 
-[ "" == "$selected" ] && exit 0
-
-cmd=$(stream_array | \
-  grep -F "$selected||" | \
-  sed -e "s/.*[|][|]//" )
-
-#  grep -P -e "^\Q$selected\E *[|][|]"   would allow stripping of trailing whitespace (Perl mode turning off regexp matching while processing the string)
-
-[ "" !=  "$cmd" ] &&  echo $cmd | bash
+    return parser.parse_args()
 
 
+def read_input(filename):
+
+    comment_pattern = re.compile(r'''^\s*#''')
+    empty_pattern = re.compile(r'''^\s*$''')
+    args_pattern = re.compile(r'''^\s*@\s-(.*)''')
+
+    args=[]
+    lines=[]
+    content_started=False;
+    prev_empty = True
+    with open(filename, 'r') as file:
+        for line in file:
+            line = line.rstrip()
+
+            if comment_pattern.search(line): continue
+
+            if not content_started:
+                if empty_pattern.search(line): 
+                  continue
+                m = args_pattern.search(line)
+                if m:
+                    args.append(m[1])
+                    continue
+                content_started = True;
+
+            elif empty_pattern.search(line):
+                if prev_empty:
+                  continue
+                prev_empty = True
+            else:
+                prev_empty = False
+
+            lines.append(line.strip())
+           
+    return [args, lines]
+
+
+def feed_to_rofi(proc, lines):
+    try:
+        for line in lines:
+            p = line.find("||")
+            
+            if p > 0:
+                line = line[:p].rstrip()
+            else:
+                line = line + "\0nonselectable\x1ftrue"
+
+            proc.stdin.write(line + "\n")
+    except BrokenPipeError:
+        pass                      # process exited early; stop writing
+    finally:
+        proc.stdin.close()        # signals EOF so the process can finish
+
+def run_rofi(file_args, lines):
+
+    rofi_args = ["rofi", "-dmenu"] + file_args
+    result = ""
+
+    with subprocess.Popen(
+        rofi_args,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+        bufsize=1,                    # line-buffered in text mode
+    ) as proc:
+        writer = threading.Thread(target=feed_to_rofi, args=(proc, lines))
+        writer.start()
+
+        for out_line in proc.stdout:  # read output as it arrives
+            if result == "" and out_line != "":
+               result = out_line.rstrip()
+      
+        writer.join()
+
+    return result
+
+def get_associated_command(user_selection, menu_lines):
+    command = ""
+    nearest=""
+    if user_selection:
+        len_selection = len(user_selection)
+        for line in menu_lines:
+            if line.startswith(user_selection):
+                rest_of_line = line[len_selection:].strip()
+                if rest_of_line.startswith("||"):
+                    command = rest_of_line[2:].strip()
+                    break
+                elif rest_of_line == "":
+                    command = line
+
+    return command
+
+
+try:
+
+    args = parse_arguments()
+    
+    args_from_file, menu_lines = read_input(args.filename )
+
+    if len(menu_lines) >= 1:     # have something to show?
+        user_selection = run_rofi(args_from_file, menu_lines)
+        command = get_associated_command(user_selection, menu_lines)
+
+        if args.type == "run":
+           os.execl("/usr/bin/bash", "bash", "-c", command)
+        elif args.type == "exit":
+           sys.exit( int(command))
+        else:
+           print(command)
+
+except:
+    type, value, traceback = sys.exc_info()
+    print("#ERROR: ", type, value)
+     
