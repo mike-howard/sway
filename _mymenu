@@ -106,7 +106,8 @@ def feed_to_rofi(proc, lines):
 
 def run_rofi(file_args, lines):
 
-    rofi_args = ["rofi", "-dmenu"] + file_args
+    rofi_args = ["rofi", "-dmenu", "-markup-rows", "-theme-str", 'window {width: 70ch;} listview {lines: 20;}'] + file_args
+    print("args", rofi_args)
     result = ""
 
     with subprocess.Popen(

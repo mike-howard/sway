@@ -11,29 +11,30 @@
 # Vertical Split: ↕️ 
 # Fullscreen: 📺 or 🔲
 
+<b>General</b>:
 🪟↩️     new terminal 🖥️ || swaymsg exec foot
-
 🪟⬆️🇨   reload Sway configuration || swaymsg reload
 🪟🇩     apps menu 🚀 || rofi -show drun -show-icons 
+🪟⬆️🇪   exit Sway || ~/.local/bin/sway/_mymenu ~/.local/bin/sway/exit.menu
+
+<b>Focus/scratchpad</b>:
 🪟🇫     make current window fullscreen || swaymsg fullscreen
 🪟⬆️🇶   kill focused window || swaymsg kill
 🪟⬆️➖   window to scratchpad || swaymsg move scratchpad
 🪟➖     Scratchpad(cycled) ↔️ floating|| swaymsg scratchpad show 
-
-
-🪟⬆️🇪   exit Sway || ~/.local/bin/sway/_mymenu ~/.local/bin/sway/exit.menu
-
-
-🪟🇧  horizontal split ||  swaymsg splith
-🪟🇻  vertical split ||  swaymsg splitv
-🪟🇪  toggle split H <> V ||  swaymsg toggle split
 🪟⬆️␣  floating ↔️ normal  || swaymsg floating toggle
 
 
+<b>Split Windows:</b>
+🪟🇧  horizontal split ||  swaymsg splith
+🪟🇻  vertical split ||  swaymsg splitv
+🪟🇪  toggle split H <> V ||  swaymsg toggle split
+
+<b>Change Layout</b>:
 🪟🇸  stacking layout || swaymsg layout stacking
 🪟🇼  tabbed layout   || swaaymsg layout tabbed
 
-Others: 
+<b>Other Menus</b>:
 sw   switch workspace || ~/.local/bin/sway/_my_choose_workspace 
 fw   find window || ~/.local/bin/sway/_my_choose_window 
 aw   set window alias 
