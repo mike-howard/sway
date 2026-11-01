@@ -27,6 +27,8 @@
 
 #!/usr/bin/python3
 
+from builtins import open
+from argparse import ArgumentParser
 import os
 import re
 import sys
@@ -34,14 +36,15 @@ import subprocess
 import threading
 import traceback
 
-from argparse import ArgumentParser
-
-comment_pattern = re.compile(r'''^\s*#''')
-empty_pattern = re.compile(r'''^\s*$''')
-args_pattern = re.compile(r'''^\s*@\s-(.*)''')
+# Special content patterns
+comment_pattern = re.compile(r'''^\s*#''')     # Eg '  # comment'
+empty_pattern = re.compile(r'''^\s*$''')       # Eg '   ' 
+args_pattern = re.compile(r'''^\s*@\s-(.*)''') # Eg ' @ -name="xxx"
 
 
 def parse_arguments():
+    """Parse the command line"""
+
     parser = ArgumentParser(
         prog="myMenu",
         description="show menu in file using rofi")
@@ -58,7 +61,11 @@ def parse_arguments():
 
 
 def read_input(filename):
-
+    """
+        Read from input file or stdin into two collections
+         * extra arguments to rofi
+         * input lines and associated commands.
+    """
     args=[]
     lines=[]
     content_started=False;
@@ -69,6 +76,8 @@ def read_input(filename):
 
             if comment_pattern.search(line): continue
 
+            # Before the first line of menu output, blank lines are
+            # discards and lines beginning with @ may be addition rofi flags
             if not content_started:
                 if empty_pattern.search(line): 
                   continue
@@ -78,6 +87,7 @@ def read_input(filename):
                     continue
                 content_started = True;
 
+            # Consecutive empty lines compressed to single ones.
             elif empty_pattern.search(line):
                 if prev_empty:
                   continue
@@ -85,6 +95,7 @@ def read_input(filename):
             else:
                 prev_empty = False
 
+            # Handle menu content
             lines.append(line.strip())
            
     return [args, lines]
