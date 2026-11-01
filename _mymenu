@@ -32,8 +32,14 @@ import re
 import sys
 import subprocess
 import threading
+import traceback
 
 from argparse import ArgumentParser
+
+comment_pattern = re.compile(r'''^\s*#''')
+empty_pattern = re.compile(r'''^\s*$''')
+args_pattern = re.compile(r'''^\s*@\s-(.*)''')
+
 
 def parse_arguments():
     parser = ArgumentParser(
@@ -52,10 +58,6 @@ def parse_arguments():
 
 
 def read_input(filename):
-
-    comment_pattern = re.compile(r'''^\s*#''')
-    empty_pattern = re.compile(r'''^\s*$''')
-    args_pattern = re.compile(r'''^\s*@\s-(.*)''')
 
     args=[]
     lines=[]
@@ -88,15 +90,21 @@ def read_input(filename):
     return [args, lines]
 
 
-def feed_to_rofi(proc, lines):
+def feed_to_rofi(command_args, proc, lines):
+    cmd_type = command_args.type
+    readonly_modifier = "\0nonselectable\x1ftrue"
     try:
         for line in lines:
             p = line.find("||")
-            
-            if p > 0:
+
+            if line == "":
+                line = readonly_modifier
+            elif line.startswith(":"): 
+                line = line[1:] + readonly_modifier
+            elif p > 0:
                 line = line[:p].rstrip()
-            else:
-                line = line + "\0nonselectable\x1ftrue"
+            elif command_args.type == "run":
+                line = line + readonly_modifier
 
             proc.stdin.write(line + "\n")
     except BrokenPipeError:
@@ -104,7 +112,7 @@ def feed_to_rofi(proc, lines):
     finally:
         proc.stdin.close()        # signals EOF so the process can finish
 
-def run_rofi(file_args, lines):
+def run_rofi(command_args, file_args, lines):
 
     rofi_args = ["rofi", "-dmenu", "-markup-rows", "-theme-str", 'window {width: 70ch;} listview {lines: 20;}'] + file_args
     print("args", rofi_args)
@@ -117,7 +125,9 @@ def run_rofi(file_args, lines):
         text=True,
         bufsize=1,                    # line-buffered in text mode
     ) as proc:
-        writer = threading.Thread(target=feed_to_rofi, args=(proc, lines))
+        writer = threading.Thread(
+            target=feed_to_rofi, 
+            args=(command_args, proc, lines))
         writer.start()
 
         for out_line in proc.stdout:  # read output as it arrives
@@ -147,22 +157,23 @@ def get_associated_command(user_selection, menu_lines):
 
 try:
 
-    args = parse_arguments()
+    command_args = parse_arguments()
     
-    args_from_file, menu_lines = read_input(args.filename )
+    args_from_file, menu_lines = read_input(command_args.filename )
 
     if len(menu_lines) >= 1:     # have something to show?
-        user_selection = run_rofi(args_from_file, menu_lines)
+        user_selection = run_rofi(command_args, args_from_file, menu_lines)
         command = get_associated_command(user_selection, menu_lines)
 
-        if args.type == "run":
+        if command_args.type == "run":
            os.execl("/usr/bin/bash", "bash", "-c", command)
-        elif args.type == "exit":
+        elif command_args.type == "exit":
            sys.exit( int(command))
         else:
            print(command)
 
 except:
-    type, value, traceback = sys.exc_info()
+    type, value, tb = sys.exc_info()
     print("#ERROR: ", type, value)
+    traceback.print_exception(tb)
      
